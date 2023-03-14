@@ -1,11 +1,10 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 public class Main {
-    public static void main(String[] args) throws IOException, FSAException {
+    public static void main(String[] args) throws IOException {
         BufferedReader bf = new BufferedReader(new FileReader("fsa.txt"));
+        BufferedWriter bw = new BufferedWriter(new FileWriter("result.txt"));
         ArrayList<String> s = new ArrayList<>();
 
         for (int i = 0; i < 5; i++) {
@@ -15,22 +14,27 @@ public class Main {
         try {
             FSA fsa = new FSA(s);
             if (fsa.complete) {
-                System.out.println(Messages.complete.getValue());
+                bw.write(Messages.complete.getValue());
+                bw.write("\n");
             } else {
-                System.out.println(Messages.incomplete.getValue());
+                bw.write(Messages.incomplete.getValue());
+                bw.write("\n");
             }
 
             if (!fsa.warnings.isEmpty()) {
-                System.out.println("Warning:");
+                bw.write("Warning:\n");
                 for (String w : fsa.warnings) {
-                    System.out.println(w);
+                    bw.write(w);
+                    bw.write("\n");
                 }
             }
         } catch (FSAException e) {
-            System.out.println("Error:");
-            System.out.println(e.getMessage());
+            bw.write("Error:\n");
+            bw.write(e.getMessage());
+            bw.write("\n");
         }
 
+        bw.close();
 
     }
 }
@@ -42,7 +46,7 @@ class FSA {
     ArrayList<String> initialStates = new ArrayList<>();
     ArrayList<String> finalStates = new ArrayList<>();
     ArrayList<String[]> transitions = new ArrayList<>();
-    ArrayList<String> warnings = new ArrayList<>();
+    HashSet<String> warnings = new HashSet<>();
     HashMap<String, HashSet<String>> undirectedGraph = new HashMap<>(); // key : state, value : child states
     HashMap<String, HashMap<String, HashSet>> directedGraph = new HashMap<>(); // key : state, value : {key : transition, value : child states}
     boolean deterministic = true;
@@ -90,6 +94,10 @@ class FSA {
 
         String[] states = s.substring(8, s.length() - 1).split(",");
         for (String state : states) {
+            if (state.length() == 0){
+                continue;
+            }
+
             if (!FSA.isGoodStateName(state)) {
                 throw new FSAException(Messages.E5.getValue());
             }
@@ -104,6 +112,10 @@ class FSA {
 
         String[] alphas = s.substring(7, s.length() - 1).split(",");
         for (String alpha : alphas) {
+            if (alpha.length() == 0){
+                continue;
+            }
+
             if (!FSA.isGoodAlphaName(alpha)) {
                 throw new FSAException(Messages.E5.getValue());
             }
@@ -117,18 +129,22 @@ class FSA {
         }
 
         String[] initStates = s.substring(9, s.length() - 1).split(",");
-        if (initStates.length < 1) {
-            throw new FSAException(Messages.E4.getValue());
-        }
-        if (initStates.length > 1) {
-            throw new FSAException(Messages.E5.getValue());
-        }
 
         for (String state : initStates) {
+            if (state.length() == 0){
+                continue;
+            }
             if (!this.states.contains(state)) {
                 throw new FSAException(Messages.E1.getValue().formatted(state));
             }
             this.initialStates.add(state);
+        }
+
+        if (this.initialStates.size() < 1) {
+            throw new FSAException(Messages.E4.getValue());
+        }
+        if (this.initialStates.size() > 1) {
+            throw new FSAException(Messages.E5.getValue());
         }
     }
 
@@ -138,16 +154,18 @@ class FSA {
         }
 
         String[] finalStates = s.substring(8, s.length() - 1).split(",");
-        if (finalStates.length < 1) {
-            this.warnings.add(Messages.W1.getValue());
-        }
         for (String state : finalStates) {
-            if (state.length() > 0) {
-                if (!this.states.contains(state)) {
-                    throw new FSAException(Messages.E1.getValue().formatted(state));
-                }
-                this.finalStates.add(state);
+            if (state.length() == 0) {
+                continue;
             }
+            if (!this.states.contains(state)) {
+                throw new FSAException(Messages.E1.getValue().formatted(state));
+            }
+            this.finalStates.add(state);
+        }
+
+        if (this.finalStates.size() < 1) {
+            this.warnings.add(Messages.W1.getValue());
         }
     }
 
@@ -158,6 +176,9 @@ class FSA {
 
         String[] transitions = s.substring(7, s.length() - 1).split(",");
         for (String trans : transitions) {
+            if (trans.length() == 0){
+                continue;
+            }
             String[] transition = trans.split(">");
 
             if (!this.states.contains(transition[0])) {
@@ -232,15 +253,17 @@ class FSA {
             this.complete = false;
         }
         for (HashMap<String, HashSet> transition : this.directedGraph.values()) {
-            if (transition.keySet().size() < this.alphabet.size()){
-                this.complete = false;
+            for (HashSet<String> states : transition.values()){
+                if (states.size() == 0){
+                    this.complete = false;
+                }
             }
         }
         return this.complete;
     }
 
 
-    private ArrayList<String> recursiveSearchInUndirectedGraph(String start, ArrayList<String> visited) {
+    private ArrayList<String>   recursiveSearchInUndirectedGraph(String start, ArrayList<String> visited) {
         for (String state : this.undirectedGraph.get(start)) {
             if (!visited.contains(state)) {
                 visited.add(state);
@@ -251,13 +274,11 @@ class FSA {
     }
 
     private ArrayList<String> recursiveSearchInDirectedGraph(String start, ArrayList<String> visited) {
-        for (HashMap<String, HashSet> transition : this.directedGraph.values()) {
-            for (HashSet<String> states : transition.values()) {
-                for (String state : states) {
-                    if (!visited.contains(state)) {
-                        visited.add(state);
-                        recursiveSearchInDirectedGraph(state, visited);
-                    }
+        for (HashSet<String> states: this.directedGraph.get(start).values()){
+            for (String state : states){
+                if (!visited.contains(state)) {
+                    visited.add(state);
+                    recursiveSearchInDirectedGraph(state, visited);
                 }
             }
         }
