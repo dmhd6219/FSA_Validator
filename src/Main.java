@@ -1,7 +1,17 @@
+// Sviatoslav Sviatkin CS-05
 import java.io.*;
 import java.util.*;
 
+/**
+ * The Main class.
+ */
 public class Main {
+    /**
+     * The entry point of application.
+     *
+     * @param args the input arguments
+     * @throws IOException  the io exception
+     */
     public static void main(String[] args) throws IOException {
         BufferedReader bf = new BufferedReader(new FileReader("fsa.txt"));
         BufferedWriter bw = new BufferedWriter(new FileWriter("result.txt"));
@@ -39,19 +49,61 @@ public class Main {
     }
 }
 
-
+/**
+ * Class that represents Finite State Machine.
+ */
 class FSA {
+    /**
+     * Array of states.
+     */
     ArrayList<String> states = new ArrayList<>();
+    /**
+     * Array with alphabet.
+     */
     ArrayList<String> alphabet = new ArrayList<>();
+    /**
+     * Array with Initial states.
+     */
     ArrayList<String> initialStates = new ArrayList<>();
+    /**
+     * Array with Final states.
+     */
     ArrayList<String> finalStates = new ArrayList<>();
+    /**
+     * Array with Transitions.
+     */
     ArrayList<String[]> transitions = new ArrayList<>();
+    /**
+     * The Warnings.
+     */
     HashSet<String> warnings = new HashSet<>();
-    HashMap<String, HashSet<String>> undirectedGraph = new HashMap<>(); // key : state, value : child states
-    HashMap<String, HashMap<String, HashSet>> directedGraph = new HashMap<>(); // key : state, value : {key : transition, value : child states}
+    /**
+     * The Undirected graph.
+     *
+     * key : state, value : child states
+     */
+    HashMap<String, HashSet<String>> undirectedGraph = new HashMap<>();
+    /**
+     * The Directed graph.
+     *
+     * key : state, value : {key : transition, value : child states}
+     */
+    HashMap<String, HashMap<String, HashSet>> directedGraph = new HashMap<>();
+    /**
+     * Contains {@code true} if this {@link FSA} is deterministic, otherwise {@code false}.
+     */
     boolean deterministic = true;
+    /**
+     * Contains {@code true} if this {@link FSA} is complete, otherwise {@code false}.
+     */
     boolean complete = true;
 
+    /**
+     * Instantiates a new FSA.
+     *
+     * @param data input strings
+     * @throws FSAException the FSA Exception
+     */
     FSA(ArrayList<String> data) throws FSAException {
         processData(data);
 
@@ -61,6 +113,12 @@ class FSA {
         isComplete();
     }
 
+    /**
+     * Handles all input strings.
+     *
+     * @param data input strings
+     * @throws FSAException the FSA Exception
+     */
     private void processData(ArrayList<String> data) throws FSAException {
         processStates(data.get(0));
         processAlphas(data.get(1));
@@ -86,7 +144,12 @@ class FSA {
 
     }
 
-
+    /**
+     * Handles input string with {@code states}.
+     *
+     * @param s input strings
+     * @throws FSAException the FSA Exception
+     */
     private void processStates(String s) throws FSAException {
         if (!s.startsWith("states=[") || !s.endsWith("]")) {
             throw new FSAException(Messages.E5.getValue());
@@ -104,7 +167,12 @@ class FSA {
             this.states.add(state);
         }
     }
-
+    /**
+     * Handles input string with {@code alphabet}.
+     *
+     * @param s input strings
+     * @throws FSAException the FSA Exception
+     */
     private void processAlphas(String s) throws FSAException {
         if (!s.startsWith("alpha=[") || !s.endsWith("]")) {
             throw new FSAException(Messages.E5.getValue());
@@ -123,6 +191,12 @@ class FSA {
         }
     }
 
+    /**
+     * Handles input string with {@code initialStates}.
+     *
+     * @param s input strings
+     * @throws FSAException the FSA Exception
+     */
     private void processInitState(String s) throws FSAException {
         if (!s.startsWith("init.st=[") || !s.endsWith("]")) {
             throw new FSAException(Messages.E5.getValue());
@@ -148,6 +222,12 @@ class FSA {
         }
     }
 
+    /**
+     * Handles input string with {@code finalStates}.
+     *
+     * @param s input strings
+     * @throws FSAException the FSA Exception
+     */
     private void processFinalState(String s) throws FSAException {
         if (!s.startsWith("fin.st=[") || !s.endsWith("]")) {
             throw new FSAException(Messages.E5.getValue());
@@ -169,6 +249,12 @@ class FSA {
         }
     }
 
+    /**
+     * Handles input string with {@code transitions}.
+     *
+     * @param s input strings
+     * @throws FSAException the FSA Exception
+     */
     private void processTransitions(String s) throws FSAException {
         if (!s.startsWith("trans=[") || !s.endsWith("]")) {
             throw new FSAException(Messages.E5.getValue());
@@ -198,6 +284,12 @@ class FSA {
         }
     }
 
+    /**
+     * Checks if name for {@code State} is good.
+     *
+     * @param s name
+     * @return {@code true} if name is good, otherwise {@code false}
+     */
     public static boolean isGoodStateName(String s) {
         String alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -210,6 +302,12 @@ class FSA {
         return true;
     }
 
+    /**
+     * Checks if name for {@code alphabet} is good.
+     *
+     * @param s name
+     * @return {@code true} if name is good, otherwise {@code false}
+     */
     public static boolean isGoodAlphaName(String s) {
         String alphabet = "abcdefghijklmnopqrstuvwxyz0123456789_";
 
@@ -222,6 +320,10 @@ class FSA {
         return true;
     }
 
+    /**
+     * Checks if all states of this {@link FSA} are reachable from initial state.
+     *
+     */
     private void allStatesReachable() {
         ArrayList<String> visited = recursiveSearchInDirectedGraph(this.initialStates.get(0), new ArrayList<>());
         if (visited.size() < this.states.size()) {
@@ -229,6 +331,10 @@ class FSA {
         }
     }
 
+    /**
+     * Checks if this {@link FSA} has some disjoint states.
+     *
+     */
     private void isDisjoint() throws FSAException {
         ArrayList<String> visited = recursiveSearchInUndirectedGraph(this.initialStates.get(0), new ArrayList<>());
         if (visited.size() < this.states.size()) {
@@ -236,6 +342,11 @@ class FSA {
         }
     }
 
+    /**
+     * Checks if this {@link FSA} is deterministic.
+     *
+     * @return {@code true} if this {@link FSA} is deterministic, otherwise {@code false}
+     */
     private boolean isDeterministic() {
         for (HashMap<String, HashSet> transition : this.directedGraph.values()) {
             for (HashSet<String> states : transition.values()) {
@@ -248,6 +359,11 @@ class FSA {
         return this.deterministic;
     }
 
+    /**
+     * Checks if this {@link FSA} is complete.
+     *
+     * @return {@code true} if this {@link FSA} is complete, otherwise {@code false}
+     */
     private boolean isComplete() {
         if (!isDeterministic()){
             this.complete = false;
@@ -263,7 +379,12 @@ class FSA {
     }
 
 
-    private ArrayList<String>   recursiveSearchInUndirectedGraph(String start, ArrayList<String> visited) {
+    /**
+     * Checks which states are joint.
+     *
+     * @return array with visited states
+     */
+    private ArrayList<String> recursiveSearchInUndirectedGraph(String start, ArrayList<String> visited) {
         for (String state : this.undirectedGraph.get(start)) {
             if (!visited.contains(state)) {
                 visited.add(state);
@@ -273,6 +394,11 @@ class FSA {
         return visited;
     }
 
+    /**
+     * Checks which states are reachable from initial state.
+     *
+     * @return array with visited states
+     */
     private ArrayList<String> recursiveSearchInDirectedGraph(String start, ArrayList<String> visited) {
         for (HashSet<String> states: this.directedGraph.get(start).values()){
             for (String state : states){
@@ -286,37 +412,84 @@ class FSA {
 
     }
 }
-
+/**
+ * The {@link Exception} for all FSA errors.
+ */
 class FSAException extends Exception {
+    /**
+     * Instantiates a new FSA exception.
+     */
     FSAException() {
         super();
     }
 
+    /**
+     * Instantiates a new FSA exception.
+     *
+     * @param s the error message
+     */
     FSAException(String s) {
         super(s);
     }
 
 }
 
-enum Messages {
+/**
+ * Messages for FSA.
+ */
+enum Messages{
+    /**
+     * The Error #1.
+     */
     E1("E1: A state '%s' is not in the set of states"),
+    /**
+     * The Error #2.
+     */
     E2("E2: Some states are disjoint"),
+    /**
+     * The Error #3.
+     */
     E3("E3: A transition '%s' is not represented in the alphabet"),
+    /**
+     * The Error #4.
+     */
     E4("E4: Initial state is not defined"),
+    /**
+     * The Error #5.
+     */
     E5("E5: Input file is malformed"),
+    /**
+     * The Warning #1.
+     */
     W1("W1: Accepting state is not defined"),
+    /**
+     * The Warning #2.
+     */
     W2("W2: Some states are not reachable from the initial state"),
+    /**
+     * The Warning #3.
+     */
     W3("W3: FSA is nondeterministic"),
+    /**
+     * Complete message.
+     */
     complete("FSA is complete"),
+    /**
+     * Incomplete message.
+     */
     incomplete("FSA is incomplete");
 
     private String value;
-
-    Messages(String value) {
+    Messages (String value){
         this.value = value;
     }
 
-    public String getValue() {
+    /**
+     * Returns message.
+     *
+     * @return the string
+     */
+    public String getValue(){
         return this.value;
     }
 }
