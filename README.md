@@ -17,7 +17,6 @@ Warnings:
 * W2: Some states are not reachable from the initial state
 * W3: FSA is nondeterministic
 
-
 Input file format
 ```
 states=[s1,s2,...]	  // s1 , s2, ... ∈ latin letters, words and numbers
