@@ -1,5 +1,7 @@
 # FSA_Validator
-Implementation of FSA validator. Given an FSA description in the *fsa.txt* (see input file format) program should output the **result.txt** containing an error description (see validation result) or a report, indicating if FSA is complete (or incomplete) and warning (see warning messages) if any. Warnings should be sorted according to their code.
+Implementation of FSA validator. Was created as homework for Theoretical Computer Science course at Innopolis University.
+
+Given an FSA description in the *fsa.txt* (see input file format) program should output the **result.txt** containing an error description (see validation result) or a report, indicating if FSA is complete (or incomplete) and warning (see warning messages) if any. Warnings should be sorted according to their code.
 
 # Validation result
 Errors:
